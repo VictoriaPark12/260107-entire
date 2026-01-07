@@ -1,0 +1,251 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.log
+target/
+build/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+bin/
+out/
+.gradletasknamecache
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.hypothesis/
+*.mo
+*.pot
+.python-version
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+.npm
+.eslintcache
+.next/
+out/
+.nuxt
+dist/
+.cache/
+.parcel-cache
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+*.env
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+log/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Build outputs
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.dSYM/
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output
+
+# Documentation
+docs/_build/
+site/
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Mac
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# Large files (100MB+)
+# Machine Learning Models
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.ckpt
+*.pb
+*.onnx
+*.tflite
+*.model
+*.weights
+*.joblib
+*.bin
+*.safetensors
+*.msgpack
+saved_model/
+checkpoints/
+models/
+
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.webm
+*.m4v
+*.mpg
+*.mpeg
+*.3gp
+*.ogv
+*.mts
+*.m2ts
+
+# Audio files (uncompressed/large)
+*.wav
+*.flac
+*.aiff
+*.aif
+*.pcm
+*.dsd
+
+# Large image formats
+*.psd
+*.psb
+*.raw
+*.cr2
+*.nef
+*.orf
+*.sr2
+*.tiff
+*.tif
+
+# Archives (potentially large)
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.bz2
+*.xz
+*.tar.gz
+*.tgz
+*.iso
+*.dmg
+
+# Database dumps
+*.sql
+*.dump
+*.bak
+
+# Dataset files
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.arrow
+*.hdf
+*.h5py
+
+.env

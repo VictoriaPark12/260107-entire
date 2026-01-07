@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # API Service (Spring Boot)
+  api:
+    image: devictoria/api:latest
+    container_name: api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - KAKAO_REST_API_KEY=${KAKAO_REST_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
+      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - AWS_REGION=ap-northeast-2
+      - FRONTEND_URL=https://www.devictoria.shop
+    volumes:
+      - /home/ubuntu/logs:/app/logs
+    networks:
+      - devictoria-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Chat Service (FastAPI)
+  chatbot:
+    image: devictoria/chatbot:latest
+    container_name: chatbot
+    restart: unless-stopped
+    ports:
+      - "9002:9002"
+    volumes:
+      - /home/ubuntu/chatbot-data:/app/data
+    networks:
+      - devictoria-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Vision Service (FastAPI)
+  vision:
+    image: devictoria/vision:latest
+    container_name: vision
+    restart: unless-stopped
+    ports:
+      - "9001:9001"
+    environment:
+      - AWS_REGION=ap-northeast-2
+      - S3_BUCKET=${S3_BUCKET:-devictoria-resources}
+    volumes:
+      - /home/ubuntu/vision-models:/app/models
+      - /home/ubuntu/vision-results:/app/results
+    networks:
+      - devictoria-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  devictoria-network:
+    driver: bridge
+

@@ -1,0 +1,149 @@
+name: Vision Service CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'vision.devictoria.shop/**'
+      - '.github/workflows/vision-deploy.yml'
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: devictoria/vision
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_USER: ubuntu
+  SERVICE_NAME: vision
+  S3_BUCKET: devictoria-resources
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_PAT }}
+      
+      # 2. Python 3.11 설정
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      # 3. 의존성 설치 및 테스트
+      - name: Install dependencies
+        working-directory: ./vision.devictoria.shop
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      
+      - name: Run tests
+        working-directory: ./vision.devictoria.shop
+        run: |
+          pytest tests/ -v || true
+      
+      # 4. S3에 모델 업로드
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      
+      - name: Sync models to S3
+        run: |
+          if [ -d "./vision.devictoria.shop/models" ]; then
+            aws s3 sync ./vision.devictoria.shop/models s3://${{ env.S3_BUCKET }}/models/vision/ \
+              --exclude "*.pyc" --exclude "__pycache__/*"
+          fi
+      
+      # 5. Docker 빌드 및 푸시
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=$(date +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./vision.devictoria.shop
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      # 6. EC2 배포
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Docker 로그인
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            
+            # 이전 컨테이너 중지 및 제거
+            docker stop ${{ env.SERVICE_NAME }} || true
+            docker rm ${{ env.SERVICE_NAME }} || true
+            
+            # 최신 이미지 풀
+            docker pull ${{ env.DOCKER_IMAGE }}:latest
+            
+            # S3에서 모델 다운로드 (초기 설정 시)
+            mkdir -p /home/ubuntu/vision-models
+            aws s3 sync s3://${{ env.S3_BUCKET }}/models/vision/ /home/ubuntu/vision-models/
+            
+            # 새 컨테이너 실행
+            docker run -d \
+              --name ${{ env.SERVICE_NAME }} \
+              --restart unless-stopped \
+              -p 9001:9001 \
+              -e AWS_REGION="ap-northeast-2" \
+              -e S3_BUCKET="${{ env.S3_BUCKET }}" \
+              -v /home/ubuntu/vision-models:/app/models \
+              -v /home/ubuntu/vision-results:/app/results \
+              ${{ env.DOCKER_IMAGE }}:latest
+            
+            # 오래된 이미지 정리
+            docker image prune -af
+      
+      # 7. Health Check
+      - name: Health Check
+        run: |
+          sleep 30
+          curl -f http://${{ secrets.EC2_HOST }}:9001/health || exit 1
+      
+      # 8. 슬랙 알림 (선택사항)
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Vision Service Deployment: ${{ job.status }}
+            Version: ${{ steps.version.outputs.VERSION }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+

@@ -1,0 +1,74 @@
+# ========================================
+# Deep Learning & NLP
+# ========================================
+# PyTorch - 딥러닝 프레임워크
+torch==2.1.1
+
+# Transformers - 허깅페이스 트랜스포머 모델 라이브러리
+transformers==4.36.0
+
+# Tokenizers - 빠른 토큰화
+tokenizers==0.15.0
+
+# ========================================
+# Web Framework
+# ========================================
+# FastAPI 웹 프레임워크 - app/main.py에서 REST API 서버 구축
+fastapi==0.104.1
+
+# ASGI 서버 - app/main.py에서 FastAPI 애플리케이션 실행 (uvicorn.run)
+uvicorn[standard]==0.24.0
+
+# 데이터 검증 및 직렬화 라이브러리 - app/sentiment/model.py에서 모델 정의
+pydantic==2.5.0
+
+# 설정 관리 라이브러리 - app/sentiment/config.py에서 설정 관리
+pydantic-settings==2.1.0
+
+# 데이터 분석 및 처리 라이브러리 - app/titanic/service.py에서 CSV 파일 읽기 및 DataFrame 처리
+pandas==2.1.3
+
+# 수치 연산 라이브러리 - app/titanic/service.py에서 임포트 (미래 ML 모델 학습/예측용)
+numpy==1.26.2
+
+# 머신러닝 라이브러리 - app/titanic/service.py에서 임포트 (미래 ML 모델 학습/예측용)
+scikit-learn==1.3.2
+
+# 데이터셋 관리 라이브러리 - 미래 ML 데이터셋 로드 및 관리용 (현재 미사용)
+datasets==2.14.7
+
+# 디버깅 라이브러리 - app/titanic/service.py에서 ic() 함수로 디버깅용 (현재 미사용)
+icecream==2.1.3
+
+# Redis 클라이언트 - app/titanic/service.py에서 데이터 캐싱 (_save_to_redis, _get_from_redis)
+redis==5.0.1
+
+# HTTP 요청 라이브러리 - app/seoul_crime/save/kakao_map_singleton.py에서 카카오맵 API 호출용
+requests==2.31.0
+
+# 데이터 시각화 라이브러리 - app/seoul_crime/nlp/nlp_router.py에서 워드클라우드 생성용
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# 워드클라우드 생성 라이브러리 - app/seoul_crime/nlp/nlp_router.py에서 사용
+wordcloud==1.9.2
+
+# 자연어 처리 라이브러리 - app/seoul_crime/nlp/nlp_router.py에서 사용
+nltk==3.8.1
+sentencepiece==0.1.99
+# 한국어 형태소 분석기 - kiwipiepy (Java 불필요, 빠른 성능)
+kiwipiepy==0.17.1
+# 한국어 형태소 분석기 - konlpy (samsung_wordcloud.py에서 사용, Java 필요)
+konlpy==0.6.0
+jpype1==1.4.1
+
+# 이미지 처리 라이브러리 - app/seoul_crime/nlp/nlp_router.py에서 사용
+Pillow==10.1.0
+# opencv-python은 현재 미사용 (필요시 headless 버전 사용: opencv-python-headless)
+
+# 지도 시각화 라이브러리 - app/us_unemployment/service.py에서 사용
+folium==0.15.1
+
+# 브라우저 자동화 라이브러리 - app/seoul_map/service.py에서 지도 이미지 저장용
+selenium==4.17.2
+webdriver-manager==4.0.2

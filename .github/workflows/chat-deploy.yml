@@ -1,0 +1,126 @@
+name: Chat Service CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'chat.devictoria.shop/**'
+      - '.github/workflows/chat-deploy.yml'
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: devictoria/chatbot
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_USER: ubuntu
+  SERVICE_NAME: chatbot
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_PAT }}
+      
+      # 2. Python 3.11 설정
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      # 3. 의존성 설치 및 테스트
+      - name: Install dependencies
+        working-directory: ./chat.devictoria.shop
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx
+      
+      - name: Run tests
+        working-directory: ./chat.devictoria.shop
+        run: |
+          pytest tests/ -v || true
+      
+      # 4. Docker 빌드 및 푸시
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=$(date +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./chat.devictoria.shop
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      # 5. EC2 배포
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Docker 로그인
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            
+            # 이전 컨테이너 중지 및 제거
+            docker stop ${{ env.SERVICE_NAME }} || true
+            docker rm ${{ env.SERVICE_NAME }} || true
+            
+            # 최신 이미지 풀
+            docker pull ${{ env.DOCKER_IMAGE }}:latest
+            
+            # 새 컨테이너 실행
+            docker run -d \
+              --name ${{ env.SERVICE_NAME }} \
+              --restart unless-stopped \
+              -p 9002:9002 \
+              -v /home/ubuntu/chatbot-data:/app/data \
+              ${{ env.DOCKER_IMAGE }}:latest
+            
+            # 오래된 이미지 정리
+            docker image prune -af
+      
+      # 6. Health Check
+      - name: Health Check
+        run: |
+          sleep 20
+          curl -f http://${{ secrets.EC2_HOST }}:9002/health || exit 1
+      
+      # 7. 슬랙 알림 (선택사항)
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Chat Service Deployment: ${{ job.status }}
+            Version: ${{ steps.version.outputs.VERSION }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+

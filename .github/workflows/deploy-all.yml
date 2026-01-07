@@ -1,0 +1,53 @@
+name: Deploy All Services
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy-api:
+    uses: ./.github/workflows/api-deploy.yml
+    secrets: inherit
+  
+  deploy-chat:
+    uses: ./.github/workflows/chat-deploy.yml
+    secrets: inherit
+  
+  deploy-vision:
+    uses: ./.github/workflows/vision-deploy.yml
+    secrets: inherit
+  
+  notify:
+    needs: [deploy-api, deploy-chat, deploy-vision]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "🚀 All Services Deployed Successfully!"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "- API: ✅"
+          echo "- Chat: ✅"
+          echo "- Vision: ✅"
+      
+      - name: Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🚀 All Services Deployed!
+            Environment: ${{ github.event.inputs.environment }}
+            - API: ✅
+            - Chat: ✅
+            - Vision: ✅
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+

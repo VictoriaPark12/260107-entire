@@ -1,0 +1,53 @@
+# 포트 배치 전략:
+# - aiion 프로젝트: 8080-8090, 9001-9004 사용 중
+# - devictoria 프로젝트: 8091-8099, 8000-8009, 9005-9099 사용 가능
+# - 앞으로 새 서비스 추가 시: 8095부터 순차적으로 할당
+
+services:
+  # API Gateway
+  gateway:
+    build:
+      context: ./api.devictoria.shop
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USERNAME=${REDIS_USERNAME}
+      - REDIS_URL=${REDIS_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+    networks:
+      - devictoria-network
+
+  # Transformer Service (KoELECTRA 감성 분석)
+  transformer:
+    build:
+      context: ./ai.devictoria.shop/services/transformer
+      dockerfile: Dockerfile
+    ports:
+      - "9007:9007"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ai.devictoria.shop/services/transformer/app/koelectra/koelectra_model:/app/app/koelectra/koelectra_model
+    networks:
+      - devictoria-network
+
+
+
+
+networks:
+  devictoria-network:
+    driver: bridge
+

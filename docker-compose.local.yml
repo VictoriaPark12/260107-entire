@@ -1,0 +1,211 @@
+# 포트 배치 전략:
+# - aiion 프로젝트: 8080-8090, 9001-9004 사용 중
+# - devictoria 프로젝트: 8091-8099, 8000-8009, 9005-9099 사용 가능
+# - 앞으로 새 서비스 추가 시: 8095부터 순차적으로 할당
+
+services:
+  # API Gateway
+  gateway:
+    build:
+      context: ./api.devictoria.shop/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USERNAME=${REDIS_USERNAME}
+      - REDIS_URL=${REDIS_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+    networks:
+      - devictoria-network
+    depends_on:
+      - oauth-service
+      - user-service
+      - mlservice
+      - transformer
+
+  # OAuth Service (Java Spring Boot)
+  oauth-service:
+    build:
+      context: ./core.devictoria.shop/services/oauthservice
+      dockerfile: Dockerfile
+    ports:
+      - "8092:8080"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USERNAME=${REDIS_USERNAME}
+      - REDIS_URL=${REDIS_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+      - KAKAO_REST_API_KEY=${KAKAO_REST_API_KEY}
+      - KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI:-http://localhost:8080/oauth2/kakao/callback}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost:8080/oauth2/google/callback}
+      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
+      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
+      - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI:-http://localhost:8080/oauth2/naver/callback}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5000}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - devictoria-network
+
+  # User Service
+  user-service:
+    build:
+      context: ./core.devictoria.shop/services/userservice
+      dockerfile: Dockerfile
+    ports:
+      - "8094:8082"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USERNAME=${REDIS_USERNAME}
+      - REDIS_URL=${REDIS_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+    networks:
+      - devictoria-network
+
+  # AI Chatbot Service
+  ai-chatbot:
+    build:
+      context: ./ai.devictoria.shop/services/chatbotservice
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_URL=${DB_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USERNAME=${REDIS_USERNAME}
+      - REDIS_URL=${REDIS_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+    networks:
+      - devictoria-network
+
+  # Crawler Service
+  crawler-service:
+    build:
+      context: ./ai.devictoria.shop/services/crawlerservice
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_URL=${DB_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USERNAME=${REDIS_USERNAME}
+      - REDIS_URL=${REDIS_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+    networks:
+      - devictoria-network
+
+  # Titanic Service (mlservice로 대체됨 - 주석 처리)
+  # titanic-service:
+  #   build:
+  #     context: ./ai.devictoria.shop/services/titanicservice
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "9006:9006"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   networks:
+  #     - devictoria-network
+
+  # ML Service (이전 titanic-service를 대체)
+  mlservice:
+    build:
+      context: ./ai.devictoria.shop/services/mlservice
+      dockerfile: Dockerfile
+    ports:
+      - "9006:9006"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ai.devictoria.shop/services/mlservice/app/titanic/models:/app/app/titanic/models
+    networks:
+      - devictoria-network
+
+  # Transformer Service (KoELECTRA 감성 분석)
+  transformer:
+    build:
+      context: ./ai.devictoria.shop/services/transformer
+      dockerfile: Dockerfile
+    ports:
+      - "9007:9007"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ai.devictoria.shop/services/transformer/app/koelectra/koelectra_model:/app/app/koelectra/koelectra_model
+    networks:
+      - devictoria-network
+
+  # PostgreSQL (필요시 사용)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_DB=devictoria
+  #     - POSTGRES_USER=devictoria
+  #     - POSTGRES_PASSWORD=devictoria123
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - devictoria-network
+
+networks:
+  devictoria-network:
+    driver: bridge
+

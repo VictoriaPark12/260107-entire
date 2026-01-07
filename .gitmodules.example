@@ -1,0 +1,15 @@
+[submodule "api.devictoria.shop"]
+    path = api.devictoria.shop
+    url = https://github.com/[USERNAME]/api.devictoria.shop.git
+    branch = main
+
+[submodule "chat.devictoria.shop"]
+    path = chat.devictoria.shop
+    url = https://github.com/[USERNAME]/chat.devictoria.shop.git
+    branch = main
+
+[submodule "vision.devictoria.shop"]
+    path = vision.devictoria.shop
+    url = https://github.com/[USERNAME]/vision.devictoria.shop.git
+    branch = main
+

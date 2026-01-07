@@ -1,0 +1,9 @@
+[submodule "api.devictoria.shop"]
+	path = api.devictoria.shop
+	url = https://github.com/VictoriaPark12/260107-api-devictoria-shop.git
+[submodule "vision.devictoria.shop"]
+	path = vision.devictoria.shop
+	url = https://github.com/VictoriaPark12/260107-vision-devictoria-shop.git
+[submodule "chat.devictoria.shop"]
+	path = chat.devictoria.shop
+	url = https://github.com/VictoriaPark12/260107-chat-devictoria-shop.git
